@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BASE_URL = 'https://localhost:7063/api'
+const BASE_URL = 'https://webapi20230226155012.azurewebsites.net/api/receipt'
 
 const api = axios.create({
     baseURL: BASE_URL,
