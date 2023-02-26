@@ -16,13 +16,14 @@ export const postReceipt = async (payload) => {
     try {
 
         const response = await api.post(`/receipt`, payload)
-
         const url = window.URL.createObjectURL(new Blob([response.data]))
 
         let a = document.createElement('a')
         a.href = url
         a.download = 'receipt.pdf'
         a.click();
+
+        return await response.data
 
     } catch (error) {
         console.log(error)

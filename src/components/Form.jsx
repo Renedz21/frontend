@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { postReceipt } from '../api'
 import { Button, Spinner, Stack, Toast, ToastContainer } from 'react-bootstrap'
+import { uploadFile } from '../utils/firebase-config'
 
 
 const Form = () => {
@@ -17,37 +18,41 @@ const Form = () => {
         documentNumber: ''
     })
 
+    const [file, setFile] = useState(null)
+
     const [isFormSubmited, setIsFormSubmited] = useState(false)
     const [isLoading, setisLoading] = useState(false)
 
     const handleChange = (e) => {
         const { name, value } = e.target
-
         setDataForm({ ...dataForm, [name]: value })
-
     }
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault()
+        try {
+            const result = await uploadFile(file);
+            const payload = {
+                logo: result,
+                currency: dataForm.currency,
+                amount: dataForm.amount,
+                title: dataForm.title,
+                description: dataForm.description,
+                address: dataForm.address,
+                name: dataForm.name,
+                documentType: dataForm.documentType,
+                documentNumber: dataForm.documentNumber
+            }
+            postReceipt(payload)
+            setisLoading(true)
 
-        const payload = {
-            logo: dataForm.logo,
-            currency: dataForm.currency,
-            amount: dataForm.amount,
-            title: dataForm.title,
-            description: dataForm.description,
-            address: dataForm.address,
-            name: dataForm.name,
-            documentType: dataForm.documentType,
-            documentNumber: dataForm.documentNumber
+            setTimeout(() => {
+                setIsFormSubmited(true)
+                setisLoading(false)
+            }, 10000);
+        } catch (error) {
+            console.log(error)
         }
-
-        postReceipt(payload)
-        setisLoading(true)
-
-        setTimeout(() => {
-            setIsFormSubmited(true)
-        }, 7000);
 
     }
 
@@ -55,7 +60,7 @@ const Form = () => {
         <Stack gap={3} className="col-md-5 mx-auto p-4">
             <>
                 <h1 className='text-center'>Generador de Recibos</h1>
-                <form>
+                <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <label htmlFor="" className="form-label">Ingrese sus nombres completos</label>
                         <input type="text" className="form-control"
@@ -102,7 +107,6 @@ const Form = () => {
                         />
                     </div>
 
-
                     <div className="mb-3">
                         <label htmlFor="" className="form-label">Ingrese el tipo de documento</label>
                         <select className='form-select' name="documentType" id="" value={dataForm.documentType} onChange={handleChange}>
@@ -121,13 +125,11 @@ const Form = () => {
                         />
                     </div>
 
-
                     <div className="mb-3">
                         <label htmlFor="" className="form-label">Subir Logo</label>
                         <input type="file" className="form-control"
                             name='logo'
-                            value={dataForm.logo}
-                            onChange={handleChange}
+                            onChange={(e) => setFile(e.target.files[0])}
                         />
                     </div>
 
@@ -138,15 +140,26 @@ const Form = () => {
 
                     <div className='d-grid'>
                         {
-                            isLoading ? (
-                                <Button variant='primary' disabled >
-                                    <Spinner as='span' className='me-2' animation="border" size='sm' role='status' aria-hidden='true' />
-                                    Generando Recibo...
-                                </Button>
+                            !isFormSubmited ? (
+                                <>
+                                    {
+                                        !isLoading ? (
+                                            <Button variant='primary' type="submit">
+                                                Generar Recibo
+                                            </Button>
+                                        ) : (
+                                            <Button variant='primary' disabled >
+                                                <Spinner as='span' className='me-2' animation="border" size='sm' role='status' aria-hidden='true' />
+                                                Generando Recibo...
+                                            </Button>
+                                        )
+                                    }
+                                </>
                             ) : (
-                                <Button variant='primary' type="submit" onClick={handleSubmit}>
-                                    Generar Recibo
-                                </Button>
+                                <>
+                                    <h1>Archivo Generado</h1>
+                                    <h3>Descargando el archivo...</h3>
+                                </>
                             )
                         }
                     </div>
